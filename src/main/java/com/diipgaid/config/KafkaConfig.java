@@ -24,6 +24,8 @@ public class KafkaConfig {
         config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         config.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         config.put("acks", AppConstant.ACKS);
+        config.put("retries", AppConstant.RETRIES);
+//        config.put("max.in.flight.requests.per.connection", AppConstant.RETRIES);
     }
 
     public static KafkaConfig getInstance() {

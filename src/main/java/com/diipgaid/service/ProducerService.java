@@ -2,8 +2,10 @@ package com.diipgaid.service;
 
 import com.diipgaid.config.KafkaConfig;
 import com.diipgaid.constant.AppConstant;
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class ProducerService {
     private KafkaProducer<String, String> producer;
@@ -29,11 +31,44 @@ public class ProducerService {
 
         // send to broker
         try {
-            System.out.println("Sending record to broker");
-            producer.send(record);
-            System.out.println("Sent record to broker successfully");
+//            System.out.println("Sending SYNC record to broker");
+//            producer.send(record);
+//            System.out.println("Sent record SYNC to broker successfully");
+
+            System.out.println("Sending ASYNC record to broker");
+            producer.send(record, new ProducerCallback());
+            System.out.println("Sent record ASYNC to broker successfully");
+
+            Thread thWait = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            thWait.setName("Producer Wait");
+            thWait.start();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+
+    private class ProducerCallback implements Callback {
+        @Override
+        public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+            if (e != null) {
+                e.printStackTrace();
+                System.out.println(e.getMessage());
+            } else {
+                System.out.println(String.format("Received ACK: topic=%s partition=%d offset=%d", recordMetadata.topic(),
+                        recordMetadata.partition(), recordMetadata.offset()));
+            }
         }
     }
 }
